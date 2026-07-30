@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Validação Share Log</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<img src="img/logo_saborevida.png" class="logo">
+
+<h1>Validação Share Log</h1>
+
+<p class="subtitulo">
+Valide os shares das lojas
+</p>
+
+<div class="grupo">
+
+<label>Pesquisar vendedor</label>
+
+<input
+type="text"
+id="pesquisaVendedor"
+placeholder="Digite seu nome..."
+autocomplete="off">
+
+<div id="listaVendedores"></div>
+
+</div>
+
+<div class="grupo">
+
+<label>Pesquisar Loja</label>
+
+<input
+type="text"
+id="pesquisaLoja"
+placeholder="Selecione primeiro o vendedor..."
+disabled
+autocomplete="off">
+
+<div id="listaLojas"></div>
+
+</div>
+
+<div id="dadosLoja"></div>
+
+<button id="enviar">
+
+ENVIAR VALIDAÇÃO
+
+</button>
+
+</div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+
+</html>
