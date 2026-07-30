@@ -120,8 +120,41 @@ input:focus{
 
 }
 
-#listaVendedores,
-#listaLojas{
+select{
+
+    width:100%;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    border:2px solid #d9d9d9;
+
+    font-size:16px;
+
+    background:#fff;
+
+    cursor:pointer;
+
+}
+
+select:focus{
+
+    outline:none;
+
+    border-color:#0072BC;
+
+}
+
+select:disabled{
+
+    background:#f5f5f5;
+
+    cursor:not-allowed;
+
+}
+
+#listaVendedores{
 
     display:none;
 
@@ -161,47 +194,128 @@ input:focus{
 
 }
 
-.card-dia{
+.secao-tipo{
 
-    border:2px solid #e5e5e5;
+    margin-bottom:35px;
 
-    border-radius:18px;
+}
+
+.secao-tipo h2{
+
+    color:#24356F;
+
+    font-size:18px;
+
+    margin-bottom:15px;
+
+    padding-bottom:8px;
+
+    border-bottom:3px solid #0072BC;
+
+}
+
+.aviso-vazio{
+
+    background:#F5F5F5;
+
+    color:#777;
+
+    text-align:center;
 
     padding:20px;
 
-    margin-bottom:20px;
+    border-radius:12px;
 
-    transition:.3s;
-
-}
-
-.card-dia:hover{
-
-    border-color:#0072BC;
+    font-size:14px;
 
 }
 
-.card-dia h3{
+/*=======================================
+  TABELA DE DADOS (substitui os cards)
+=======================================*/
 
-    color:#24356F;
+.tabela-wrapper{
 
-    margin-bottom:10px;
+    overflow-x:auto;
+
+    border-radius:16px;
+
+    border:1px solid #e5e5e5;
 
 }
 
-.info{
+.tabela-dados{
 
-    margin:8px 0;
+    width:100%;
+
+    border-collapse:collapse;
+
+    font-size:14px;
+
+}
+
+.tabela-dados thead th{
+
+    background:#24356F;
+
+    color:#fff;
+
+    text-align:left;
+
+    padding:14px 16px;
+
+    font-weight:600;
+
+    white-space:nowrap;
+
+}
+
+.tabela-dados tbody td{
+
+    padding:14px 16px;
+
+    border-bottom:1px solid #eee;
+
+    vertical-align:top;
 
     color:#444;
 
-    font-size:15px;
+}
+
+.tabela-dados tbody tr:last-child td{
+
+    border-bottom:none;
 
 }
 
-.info strong{
+.tabela-dados tbody tr:hover{
 
-    color:#24356F;
+    background:#f7f9fc;
+
+}
+
+/* Linhas Share IOG (amarelado, cor da logo) */
+
+.linha-dia[data-tipo="share iog"]{
+    background:#FFFBEF;
+    border-left:4px solid #FFC20E;
+}
+
+.linha-dia[data-tipo="share iog"]:hover{
+    background:#FFF6DA;
+}
+
+/* Linhas Share REQ (azul) */
+
+.linha-dia[data-tipo="share req"]{
+    border-left:4px solid #0072BC;
+}
+
+.tabela-dados textarea{
+
+    min-height:44px;
+
+    font-size:13px;
 
 }
 
@@ -209,9 +323,9 @@ input:focus{
 
     display:flex;
 
-    gap:20px;
+    gap:16px;
 
-    margin:18px 0;
+    margin:0;
 
 }
 
@@ -224,6 +338,51 @@ input:focus{
     gap:6px;
 
     font-weight:500;
+
+    white-space:nowrap;
+
+}
+
+/* Empilha a tabela em telas pequenas: cada célula vira uma linha
+   com o rótulo da coluna (data-label) à esquerda. */
+
+@media(max-width:700px){
+
+    .tabela-dados thead{
+        display:none;
+    }
+
+    .tabela-dados, .tabela-dados tbody, .tabela-dados tr, .tabela-dados td{
+        display:block;
+        width:100%;
+    }
+
+    .tabela-dados tr{
+        margin-bottom:14px;
+        border-bottom:2px solid #eee;
+    }
+
+    .tabela-dados td{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+        border-bottom:1px solid #f2f2f2;
+        text-align:right;
+    }
+
+    .tabela-dados td::before{
+        content: attr(data-label);
+        font-weight:600;
+        color:#24356F;
+        text-align:left;
+    }
+
+    .radio-tabela{
+        flex-direction:column;
+        align-items:flex-end;
+        gap:6px;
+    }
 
 }
 
@@ -245,7 +404,7 @@ textarea{
 
 }
 
-button{
+button#enviar{
 
     width:100%;
 
@@ -269,10 +428,52 @@ button{
 
 }
 
-button:hover{
+button#enviar:hover{
 
     background:#005D99;
 
+}
+
+button#enviar:disabled{
+
+    background:#999;
+
+    cursor:not-allowed;
+
+}
+
+.badge-tipo{
+
+    display:inline-block;
+
+    background:#0072BC;
+
+    color:#fff;
+
+    font-size:12px;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+    letter-spacing:0.5px;
+
+    padding:5px 12px;
+
+    border-radius:20px;
+
+    margin-bottom:12px;
+
+}
+
+.secao-iog h2{
+    color:#7A5900;
+    border-bottom-color:#FFC20E;
+}
+
+.secao-req h2{
+    color:#24356F;
+    border-bottom-color:#0072BC;
 }
 
 @media(max-width:700px){
