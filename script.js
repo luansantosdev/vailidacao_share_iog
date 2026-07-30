@@ -2,8 +2,8 @@
 // URL DO APPS SCRIPT
 //=======================================
 
-const URL_API = "https://script.google.com/macros/s/AKfycbw-ivhRQoZBuyHdGfRB0jabQxmlKrLg4qglO4uUhsVoXoNl5IJxtlOKZjh-4GHFu3G_hg/exec";
-
+const URL_API = "https://script.google.com/macros/s/AKfycbzTqPjWflpapiTRUJXGUzYQCwQz3VM5qxgibc1oDa22t3m4R3fYaXE6WQCaon0JrAp0/exec";
+                 
 //=======================================
 // ELEMENTOS
 //=======================================
@@ -12,7 +12,6 @@ const pesquisaVendedor = document.getElementById("pesquisaVendedor");
 const listaVendedores = document.getElementById("listaVendedores");
 
 const pesquisaLoja = document.getElementById("pesquisaLoja");
-const listaLojas = document.getElementById("listaLojas");
 
 const dadosLoja = document.getElementById("dadosLoja");
 
@@ -86,9 +85,9 @@ async function selecionarVendedor(nome){
 
     listaVendedores.style.display="none";
 
-    pesquisaLoja.disabled=false;
+    pesquisaLoja.disabled=true;
 
-    pesquisaLoja.placeholder="Digite o nome da loja...";
+    pesquisaLoja.innerHTML="<option value=''>Carregando lojas...</option>";
 
     dadosLoja.innerHTML="";
 
@@ -102,67 +101,61 @@ async function selecionarVendedor(nome){
 
     lojas=await resposta.json();
 
+    preencherSelectLojas();
+
 }
 
 //=======================================
-// PESQUISA LOJAS
+// PREENCHER SELECT DE LOJAS
 //=======================================
 
-pesquisaLoja.addEventListener("input",()=>{
+function preencherSelectLojas(){
 
-    const texto=pesquisaLoja.value.toLowerCase();
+    pesquisaLoja.innerHTML="<option value=''>Selecione a loja...</option>";
 
-    listaLojas.innerHTML="";
+    lojas.forEach(loja=>{
 
-    if(texto==""){
+        const opcao=document.createElement("option");
 
-        listaLojas.style.display="none";
+        opcao.value=loja;
 
-        return;
+        opcao.innerText=loja;
 
-    }
-
-    lojas
-    .filter(l=>l.toLowerCase().includes(texto))
-    .forEach(loja=>{
-
-        const div=document.createElement("div");
-
-        div.className="item";
-
-        div.innerText=loja;
-
-        div.onclick=()=>selecionarLoja(loja);
-
-        listaLojas.appendChild(div);
+        pesquisaLoja.appendChild(opcao);
 
     });
 
-    listaLojas.style.display="block";
+    pesquisaLoja.disabled=false;
 
-});
+}
 
 //=======================================
 // SELECIONAR LOJA
 //=======================================
 
-async function selecionarLoja(nome){
+pesquisaLoja.addEventListener("change",()=>{
 
-    lojaSelecionada=nome;
+    if(pesquisaLoja.value===""){
 
-    pesquisaLoja.value=nome;
+        dadosLoja.innerHTML="";
 
-    listaLojas.style.display="none";
+        return;
+
+    }
+
+    lojaSelecionada=pesquisaLoja.value;
 
     carregarDadosLoja();
 
-}
+});
 
 //=======================================
 // CARREGAR DADOS DA LOJA
 //=======================================
 
 async function carregarDadosLoja(){
+
+    dadosLoja.innerHTML="<p style='text-align:center;color:#777;'>Carregando...</p>";
 
     const resposta=await fetch(
 
@@ -175,6 +168,287 @@ async function carregarDadosLoja(){
 
     const dados=await resposta.json();
 
-    console.log(dados);
+    renderizarTudo(dados);
 
 }
+
+//=======================================
+// FORMATAR SHARE COMO PORCENTAGEM
+//=======================================
+
+function formatarShare(valor){
+
+    const numero = Number(valor);
+
+    if(isNaN(numero)){
+        return valor;
+    }
+
+    const percentual = numero <= 1 ? numero * 100 : numero;
+
+    return percentual.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }) + "%";
+
+}
+
+//=======================================
+// FORMATAR DATA NO FRONT (proteção extra)
+//=======================================
+// CORRIGIDO: antes, se item.data chegasse como um Date real
+// (ou qualquer coisa que não fosse exatamente "dd/MM/yyyy"),
+// o innerHTML acabava chamando .toString() nele e aparecia
+// "Wed Jul 01 2026 00:00:00 GMT-0300 (Horário Padrão de Brasília)".
+// Agora, qualquer formato de entrada é normalizado para dd/MM/yyyy.
+
+function formatarDataFront(valor){
+
+    // Já está no formato correto? Mantém como está.
+    if(typeof valor === "string" && /^\d{2}\/\d{2}\/\d{4}$/.test(valor)){
+        return valor;
+    }
+
+    // Cobre qualquer outro caso (Date real, string ISO, timestamp, etc.)
+    const data = valor instanceof Date ? valor : new Date(valor);
+
+    if(!isNaN(data.getTime())){
+
+        const dia = String(data.getDate()).padStart(2,"0");
+        const mes = String(data.getMonth()+1).padStart(2,"0");
+        const ano = data.getFullYear();
+
+        return `${dia}/${mes}/${ano}`;
+
+    }
+
+    return valor;
+
+}
+
+//=======================================
+// GERAR ID SEGURO PARA USO EM name/id DO HTML
+//=======================================
+// A data vem como "dd/MM/yyyy" — trocamos as barras
+// por hífen para poder usar em atributos id/name.
+
+function idSeguro(data, tipo){
+    return String(data).replace(/\//g,"-") + "-" + tipo;
+}
+
+//=======================================
+// RENDERIZAR AS DUAS SEÇÕES (share iog + share req)
+//=======================================
+
+function renderizarTudo(dados){
+
+    dadosLoja.innerHTML="";
+
+    if(!Array.isArray(dados) || dados.length===0){
+
+        dadosLoja.innerHTML =
+            "<p style='text-align:center;color:#777;'>Nenhum dado encontrado para essa combinação de vendedor e loja. Verifique se o nome do vendedor e o nome da loja na planilha estão exatamente iguais aos exibidos aqui.</p>";
+
+        return;
+
+    }
+
+    const iog = dados.filter(d=>d.tipo==="share iog");
+    const req = dados.filter(d=>d.tipo==="share req");
+
+    dadosLoja.appendChild(
+
+        criarSecao("Share IOG", iog)
+
+    );
+
+    dadosLoja.appendChild(
+
+        criarSecao("Share REQ", req)
+
+    );
+
+}
+
+//=======================================
+// CRIAR UMA SEÇÃO (título + cartões ou aviso)
+//=======================================
+// CORRIGIDO: agora cada seção recebe uma classe extra
+// (secao-iog / secao-req) para poder estilizar o título
+// de forma diferente no CSS.
+
+function criarSecao(titulo, lista){
+
+    const secao=document.createElement("div");
+
+    secao.className = "secao-tipo" + (titulo === "Share IOG" ? " secao-iog" : " secao-req");
+
+    const h2=document.createElement("h2");
+
+    h2.innerText=titulo;
+
+    secao.appendChild(h2);
+
+    if(lista.length===0){
+
+        const aviso=document.createElement("p");
+
+        aviso.className="aviso-vazio";
+
+        aviso.innerText="Nenhuma resposta de "+titulo+" encontrada para essa loja.";
+
+        secao.appendChild(aviso);
+
+        return secao;
+
+    }
+
+    // Envolve a tabela numa div com scroll horizontal (útil no celular)
+    const wrapper=document.createElement("div");
+    wrapper.className="tabela-wrapper";
+
+    const tabela=document.createElement("table");
+    tabela.className="tabela-dados";
+
+    tabela.innerHTML=`
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Share</th>
+                <th>Detalhes da resposta</th>
+                <th>Status</th>
+                <th>Observação</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    `;
+
+    const corpo=tabela.querySelector("tbody");
+
+    lista.forEach(item=>{
+
+        const linha=document.createElement("tr");
+
+        linha.className="linha-dia";
+        linha.dataset.tipo=item.tipo;
+
+        const dataFormatada = formatarDataFront(item.data);
+
+        const id = idSeguro(dataFormatada, item.tipo);
+
+        linha.dataset.data=dataFormatada;
+        linha.dataset.share=item.share;
+        linha.dataset.qtdsv=item.qtdSV;
+        linha.dataset.qtdtotalpdv=item.qtdTotalPdv;
+        linha.dataset.empregado=item.empregado;
+        linha.dataset.vendedor=item.vendedor;
+        linha.dataset.loja=item.loja;
+
+        linha.innerHTML=`
+            <td data-label="Data">${dataFormatada}</td>
+
+            <td data-label="Share">${formatarShare(item.share)}</td>
+
+            <td data-label="Detalhes da resposta">${item.qtdSV} de ${item.qtdTotalPdv} (S&V / total PDV)</td>
+
+            <td data-label="Status">
+                <div class="radio radio-tabela">
+                    <label>
+                        <input type="radio" name="status-${id}" value="Correto">
+                        Correto
+                    </label>
+                    <label>
+                        <input type="radio" name="status-${id}" value="Incorreto">
+                        Incorreto
+                    </label>
+                </div>
+            </td>
+
+            <td data-label="Observação">
+                <textarea id="obs-${id}" placeholder="Observação (opcional)"></textarea>
+            </td>
+        `;
+
+        corpo.appendChild(linha);
+
+    });
+
+    wrapper.appendChild(tabela);
+
+    secao.appendChild(wrapper);
+
+    return secao;
+
+}
+
+//=======================================
+// ENVIAR VALIDAÇÃO
+//=======================================
+
+document.getElementById("enviar").addEventListener("click", async ()=>{
+
+    const linhas=document.querySelectorAll(".linha-dia");
+
+    if(linhas.length===0){
+        alert("Selecione um vendedor e uma loja antes de enviar.");
+        return;
+    }
+
+    const respostas=[];
+
+    for(const linha of linhas){
+
+        const id = idSeguro(linha.dataset.data, linha.dataset.tipo);
+
+        const marcado=linha.querySelector(`input[name="status-${id}"]:checked`);
+
+        if(!marcado){
+            alert("Marque Correto ou Incorreto em todos os dias antes de enviar.");
+            return;
+        }
+
+        respostas.push({
+            vendedor: linha.dataset.vendedor,
+            empregado: linha.dataset.empregado,
+            loja: linha.dataset.loja,
+            data: linha.dataset.data,
+            qtdSV: linha.dataset.qtdsv,
+            qtdTotalPdv: linha.dataset.qtdtotalpdv,
+            tipo: linha.dataset.tipo,
+            share: linha.dataset.share,
+            status: marcado.value,
+            observacao: document.getElementById(`obs-${id}`).value
+        });
+
+    }
+
+    const botao=document.getElementById("enviar");
+
+    botao.disabled=true;
+    botao.innerText="Enviando...";
+
+    try{
+
+        await fetch(URL_API, {
+            method: "POST",
+            body: JSON.stringify(respostas)
+        });
+
+        alert("Validação enviada com sucesso!");
+
+        dadosLoja.innerHTML="";
+        pesquisaVendedor.value="";
+        pesquisaLoja.innerHTML="<option value=''>Selecione primeiro o vendedor...</option>";
+        pesquisaLoja.disabled=true;
+
+    }catch(erro){
+
+        alert("Erro ao enviar. Tente novamente.");
+        console.error(erro);
+
+    }
+
+    botao.disabled=false;
+    botao.innerText="ENVIAR VALIDAÇÃO";
+
+});
