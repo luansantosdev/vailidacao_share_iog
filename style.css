@@ -343,45 +343,36 @@ select:disabled{
 
 }
 
-/* Empilha a tabela em telas pequenas: cada célula vira uma linha
-   com o rótulo da coluna (data-label) à esquerda. */
+/* Mobile: mantém a tabela com colunas iguais ao desktop,
+   só compacta fontes/paddings e permite rolar horizontalmente
+   dentro de .tabela-wrapper (que já tem overflow-x:auto). */
 
 @media(max-width:700px){
 
-    .tabela-dados thead{
-        display:none;
+    .tabela-dados{
+        font-size:12.5px;
+        min-width:640px; /* garante que as colunas não espremam demais */
     }
 
-    .tabela-dados, .tabela-dados tbody, .tabela-dados tr, .tabela-dados td{
-        display:block;
-        width:100%;
+    .tabela-dados thead th{
+        padding:10px 8px;
+        font-size:12px;
     }
 
-    .tabela-dados tr{
-        margin-bottom:14px;
-        border-bottom:2px solid #eee;
-    }
-
-    .tabela-dados td{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:12px;
-        border-bottom:1px solid #f2f2f2;
-        text-align:right;
-    }
-
-    .tabela-dados td::before{
-        content: attr(data-label);
-        font-weight:600;
-        color:#24356F;
-        text-align:left;
+    .tabela-dados tbody td{
+        padding:10px 8px;
     }
 
     .radio-tabela{
         flex-direction:column;
-        align-items:flex-end;
         gap:6px;
+        white-space:nowrap;
+    }
+
+    .tabela-dados textarea{
+        min-width:110px;
+        min-height:38px;
+        font-size:12px;
     }
 
 }
