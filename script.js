@@ -2,7 +2,7 @@
 // URL DO APPS SCRIPT
 //=======================================
 
-const URL_API = "https://script.google.com/macros/s/AKfycbzTqPjWflpapiTRUJXGUzYQCwQz3VM5qxgibc1oDa22t3m4R3fYaXE6WQCaon0JrAp0/exec";
+const URL_API = "https://script.google.com/macros/s/AKfycbypLNpBug3PLmwd2YHo6y4nmbBGacVPiULFP7YTCXYuWj5leGYmkwJTnTaLqJNebc9RMw/exec";
                  
 //=======================================
 // ELEMENTOS
@@ -27,9 +27,18 @@ let lojaSelecionada = "";
 
 async function carregarVendedores(){
 
-    const resposta = await fetch(URL_API + "?acao=vendedores");
+    try{
 
-    vendedores = await resposta.json();
+        const resposta = await fetch(URL_API + "?acao=vendedores");
+
+        vendedores = await resposta.json();
+
+    }catch(erro){
+
+        console.error("Erro ao carregar vendedores:", erro);
+        vendedores = [];
+
+    }
 
 }
 
@@ -91,17 +100,26 @@ async function selecionarVendedor(nome){
 
     dadosLoja.innerHTML="";
 
-    const resposta=await fetch(
+    try{
 
-        URL_API+
-        "?acao=lojas&vendedor="+
-        encodeURIComponent(nome)
+        const resposta=await fetch(
 
-    );
+            URL_API+
+            "?acao=lojas&vendedor="+
+            encodeURIComponent(nome)
 
-    lojas=await resposta.json();
+        );
 
-    preencherSelectLojas();
+        lojas=await resposta.json();
+
+        preencherSelectLojas();
+
+    }catch(erro){
+
+        console.error("Erro ao carregar lojas:", erro);
+        pesquisaLoja.innerHTML="<option value=''>Erro ao carregar lojas</option>";
+
+    }
 
 }
 
@@ -157,18 +175,27 @@ async function carregarDadosLoja(){
 
     dadosLoja.innerHTML="<p style='text-align:center;color:#777;'>Carregando...</p>";
 
-    const resposta=await fetch(
+    try{
 
-        URL_API+
-        "?acao=dados"+
-        "&vendedor="+encodeURIComponent(vendedorSelecionado)+
-        "&loja="+encodeURIComponent(lojaSelecionada)
+        const resposta=await fetch(
 
-    );
+            URL_API+
+            "?acao=dados"+
+            "&vendedor="+encodeURIComponent(vendedorSelecionado)+
+            "&loja="+encodeURIComponent(lojaSelecionada)
 
-    const dados=await resposta.json();
+        );
 
-    renderizarTudo(dados);
+        const dados=await resposta.json();
+
+        renderizarTudo(dados);
+
+    }catch(erro){
+
+        console.error("Erro ao carregar dados da loja:", erro);
+        dadosLoja.innerHTML="<p style='text-align:center;color:#c00;'>Erro ao carregar dados. Tente novamente.</p>";
+
+    }
 
 }
 
@@ -196,20 +223,13 @@ function formatarShare(valor){
 //=======================================
 // FORMATAR DATA NO FRONT (proteção extra)
 //=======================================
-// CORRIGIDO: antes, se item.data chegasse como um Date real
-// (ou qualquer coisa que não fosse exatamente "dd/MM/yyyy"),
-// o innerHTML acabava chamando .toString() nele e aparecia
-// "Wed Jul 01 2026 00:00:00 GMT-0300 (Horário Padrão de Brasília)".
-// Agora, qualquer formato de entrada é normalizado para dd/MM/yyyy.
 
 function formatarDataFront(valor){
 
-    // Já está no formato correto? Mantém como está.
     if(typeof valor === "string" && /^\d{2}\/\d{2}\/\d{4}$/.test(valor)){
         return valor;
     }
 
-    // Cobre qualquer outro caso (Date real, string ISO, timestamp, etc.)
     const data = valor instanceof Date ? valor : new Date(valor);
 
     if(!isNaN(data.getTime())){
@@ -229,8 +249,6 @@ function formatarDataFront(valor){
 //=======================================
 // GERAR ID SEGURO PARA USO EM name/id DO HTML
 //=======================================
-// A data vem como "dd/MM/yyyy" — trocamos as barras
-// por hífen para poder usar em atributos id/name.
 
 function idSeguro(data, tipo){
     return String(data).replace(/\//g,"-") + "-" + tipo;
@@ -273,9 +291,6 @@ function renderizarTudo(dados){
 //=======================================
 // CRIAR UMA SEÇÃO (título + cartões ou aviso)
 //=======================================
-// CORRIGIDO: agora cada seção recebe uma classe extra
-// (secao-iog / secao-req) para poder estilizar o título
-// de forma diferente no CSS.
 
 function criarSecao(titulo, lista){
 
@@ -303,7 +318,6 @@ function criarSecao(titulo, lista){
 
     }
 
-    // Envolve a tabela numa div com scroll horizontal (útil no celular)
     const wrapper=document.createElement("div");
     wrapper.className="tabela-wrapper";
 
