@@ -2,8 +2,8 @@
 // URL DO APPS SCRIPT
 //=======================================
 
-const URL_API = "https://script.google.com/macros/s/AKfycbypLNpBug3PLmwd2YHo6y4nmbBGacVPiULFP7YTCXYuWj5leGYmkwJTnTaLqJNebc9RMw/exec";
-                 
+const URL_API = "https://script.google.com/macros/s/AKfycbwxVMHm6EF-E365_nfX3MdLlgiHf-LgVNMM7L2ID3LuPRulrBShGFeAHXFrzEMXW19Whw/exec";
+
 //=======================================
 // ELEMENTOS
 //=======================================
@@ -15,34 +15,44 @@ const pesquisaLoja = document.getElementById("pesquisaLoja");
 
 const dadosLoja = document.getElementById("dadosLoja");
 
-let vendedores = [];
-let lojas = [];
+let baseCompleta = [];   // todos os registros, carregados uma única vez
+let vendedores = [];     // lista única de nomes de vendedores
 
 let vendedorSelecionado = "";
 let lojaSelecionada = "";
 
 //=======================================
-// CARREGAR VENDEDORES
+// CARREGAR TUDO DE UMA VEZ (única chamada ao servidor)
 //=======================================
 
-async function carregarVendedores(){
+async function carregarTudo(){
+
+    pesquisaVendedor.placeholder = "Carregando...";
+    pesquisaVendedor.disabled = true;
 
     try{
 
-        const resposta = await fetch(URL_API + "?acao=vendedores");
+        const resposta = await fetch(URL_API + "?acao=tudo");
 
-        vendedores = await resposta.json();
+        baseCompleta = await resposta.json();
+
+        vendedores = [...new Set(
+            baseCompleta.map(item => item.vendedor).filter(Boolean)
+        )].sort();
+
+        pesquisaVendedor.placeholder = "Digite seu nome...";
+        pesquisaVendedor.disabled = false;
 
     }catch(erro){
 
-        console.error("Erro ao carregar vendedores:", erro);
-        vendedores = [];
+        console.error("Erro ao carregar dados:", erro);
+        pesquisaVendedor.placeholder = "Erro ao carregar. Recarregue a página.";
 
     }
 
 }
 
-carregarVendedores();
+carregarTudo();
 
 //=======================================
 // PESQUISA DE VENDEDOR
@@ -83,10 +93,10 @@ pesquisaVendedor.addEventListener("input",()=>{
 });
 
 //=======================================
-// SELECIONAR VENDEDOR
+// SELECIONAR VENDEDOR (filtro local, instantâneo)
 //=======================================
 
-async function selecionarVendedor(nome){
+function selecionarVendedor(nome){
 
     vendedorSelecionado=nome;
 
@@ -94,32 +104,17 @@ async function selecionarVendedor(nome){
 
     listaVendedores.style.display="none";
 
-    pesquisaLoja.disabled=true;
-
-    pesquisaLoja.innerHTML="<option value=''>Carregando lojas...</option>";
-
     dadosLoja.innerHTML="";
 
-    try{
+    const lojas = [...new Set(
 
-        const resposta=await fetch(
+        baseCompleta
+            .filter(item => item.vendedor === nome)
+            .map(item => item.loja)
 
-            URL_API+
-            "?acao=lojas&vendedor="+
-            encodeURIComponent(nome)
+    )].sort();
 
-        );
-
-        lojas=await resposta.json();
-
-        preencherSelectLojas();
-
-    }catch(erro){
-
-        console.error("Erro ao carregar lojas:", erro);
-        pesquisaLoja.innerHTML="<option value=''>Erro ao carregar lojas</option>";
-
-    }
+    preencherSelectLojas(lojas);
 
 }
 
@@ -127,7 +122,7 @@ async function selecionarVendedor(nome){
 // PREENCHER SELECT DE LOJAS
 //=======================================
 
-function preencherSelectLojas(){
+function preencherSelectLojas(lojas){
 
     pesquisaLoja.innerHTML="<option value=''>Selecione a loja...</option>";
 
@@ -148,7 +143,7 @@ function preencherSelectLojas(){
 }
 
 //=======================================
-// SELECIONAR LOJA
+// SELECIONAR LOJA (filtro local, instantâneo)
 //=======================================
 
 pesquisaLoja.addEventListener("change",()=>{
@@ -163,41 +158,14 @@ pesquisaLoja.addEventListener("change",()=>{
 
     lojaSelecionada=pesquisaLoja.value;
 
-    carregarDadosLoja();
+    const dadosFiltrados = baseCompleta.filter(item =>
+        item.vendedor === vendedorSelecionado &&
+        item.loja === lojaSelecionada
+    );
+
+    renderizarTudo(dadosFiltrados);
 
 });
-
-//=======================================
-// CARREGAR DADOS DA LOJA
-//=======================================
-
-async function carregarDadosLoja(){
-
-    dadosLoja.innerHTML="<p style='text-align:center;color:#777;'>Carregando...</p>";
-
-    try{
-
-        const resposta=await fetch(
-
-            URL_API+
-            "?acao=dados"+
-            "&vendedor="+encodeURIComponent(vendedorSelecionado)+
-            "&loja="+encodeURIComponent(lojaSelecionada)
-
-        );
-
-        const dados=await resposta.json();
-
-        renderizarTudo(dados);
-
-    }catch(erro){
-
-        console.error("Erro ao carregar dados da loja:", erro);
-        dadosLoja.innerHTML="<p style='text-align:center;color:#c00;'>Erro ao carregar dados. Tente novamente.</p>";
-
-    }
-
-}
 
 //=======================================
 // FORMATAR SHARE COMO PORCENTAGEM
@@ -289,7 +257,7 @@ function renderizarTudo(dados){
 }
 
 //=======================================
-// CRIAR UMA SEÇÃO (título + cartões ou aviso)
+// CRIAR UMA SEÇÃO (título + tabela ou aviso)
 //=======================================
 
 function criarSecao(titulo, lista){
