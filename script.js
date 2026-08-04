@@ -2,7 +2,7 @@
 // URL DO APPS SCRIPT
 //=======================================
 
-const URL_API = "https://script.google.com/macros/s/AKfycbwxVMHm6EF-E365_nfX3MdLlgiHf-LgVNMM7L2ID3LuPRulrBShGFeAHXFrzEMXW19Whw/exec";
+const URL_API = "https://script.google.com/macros/s/AKfycbyOx4uMH09wE42vOvpQO2yoWhZ4SvSSQD7RaIdzHhHTuY6oic1H8_z4IuTW0yi48cJ8jA/exec";
 
 //=======================================
 // ELEMENTOS
@@ -17,6 +17,7 @@ const dadosLoja = document.getElementById("dadosLoja");
 
 let baseCompleta = [];   // todos os registros, carregados uma única vez
 let vendedores = [];     // lista única de nomes de vendedores
+let respondidas = [];    // pares vendedor+loja já validados (normalizados)
 
 let vendedorSelecionado = "";
 let lojaSelecionada = "";
@@ -34,7 +35,10 @@ async function carregarTudo(){
 
         const resposta = await fetch(URL_API + "?acao=tudo");
 
-        baseCompleta = await resposta.json();
+        const json = await resposta.json();
+
+        baseCompleta = json.dados;
+        respondidas = json.respondidas;
 
         vendedores = [...new Set(
             baseCompleta.map(item => item.vendedor).filter(Boolean)
@@ -106,13 +110,23 @@ function selecionarVendedor(nome){
 
     dadosLoja.innerHTML="";
 
+    const nomeNormalizado = nome.trim().toLowerCase();
+
+    const lojasJaRespondidas = new Set(
+        respondidas
+            .filter(r => r.vendedor === nomeNormalizado)
+            .map(r => r.loja)
+    );
+
     const lojas = [...new Set(
 
         baseCompleta
             .filter(item => item.vendedor === nome)
             .map(item => item.loja)
 
-    )].sort();
+    )]
+    .filter(loja => !lojasJaRespondidas.has(loja.trim().toLowerCase()))
+    .sort();
 
     preencherSelectLojas(lojas);
 
@@ -125,6 +139,15 @@ function selecionarVendedor(nome){
 function preencherSelectLojas(lojas){
 
     pesquisaLoja.innerHTML="<option value=''>Selecione a loja...</option>";
+
+    if(lojas.length === 0){
+
+        pesquisaLoja.innerHTML="<option value=''>Nenhuma loja pendente</option>";
+        pesquisaLoja.disabled=true;
+
+        return;
+
+    }
 
     lojas.forEach(loja=>{
 
@@ -416,10 +439,21 @@ document.getElementById("enviar").addEventListener("click", async ()=>{
             body: JSON.stringify(respostas)
         });
 
+        // marca essa loja como respondida localmente,
+        // pra sumir do select mesmo sem recarregar a página
+        respostas.forEach(r => {
+            respondidas.push({
+                vendedor: normalizarLocal(r.vendedor),
+                loja: normalizarLocal(r.loja)
+            });
+        });
+
         alert("Validação enviada com sucesso!");
 
         dadosLoja.innerHTML="";
         pesquisaVendedor.value="";
+        vendedorSelecionado="";
+        lojaSelecionada="";
         pesquisaLoja.innerHTML="<option value=''>Selecione primeiro o vendedor...</option>";
         pesquisaLoja.disabled=true;
 
@@ -434,3 +468,11 @@ document.getElementById("enviar").addEventListener("click", async ()=>{
     botao.innerText="ENVIAR VALIDAÇÃO";
 
 });
+
+//=======================================
+// NORMALIZAR TEXTO (espelha o normalizar() do Code.gs)
+//=======================================
+
+function normalizarLocal(texto){
+    return String(texto || "").trim().toLowerCase();
+}
