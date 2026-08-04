@@ -2,7 +2,7 @@
 // URL DO APPS SCRIPT
 //=======================================
 
-const URL_API = "https://script.google.com/macros/s/AKfycbyOx4uMH09wE42vOvpQO2yoWhZ4SvSSQD7RaIdzHhHTuY6oic1H8_z4IuTW0yi48cJ8jA/exec";
+const URL_API = "https://script.google.com/macros/s/AKfycbyhBkIePKM-f_DoW_52PK-ApI3MpgOIFSm-e9LjvUa23P3VDVbJm2J31sxACEnnf5noVA/exec";
 
 //=======================================
 // ELEMENTOS
