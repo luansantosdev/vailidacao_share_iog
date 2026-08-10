@@ -3,7 +3,7 @@
 //=======================================
 
 const URL_API = "https://script.google.com/macros/s/AKfycbwL8o8pZFWYHuRcUbbI1NEHRWWbWsKmNxXEq0vr1BEg0-k1S9V_Ol4xs2tnntX38gKFTg/exec";
-
+                 
 //=======================================
 // ELEMENTOS
 //=======================================
@@ -240,9 +240,14 @@ function formatarDataFront(valor){
 //=======================================
 // GERAR ID SEGURO PARA USO EM name/id DO HTML
 //=======================================
+// CORRIGIDO: antes usava só data+tipo, então duas linhas com o mesmo
+// dia e mesmo tipo (ex: dois empregados na mesma loja) geravam o
+// MESMO id — os radios viravam o mesmo grupo (selecionar um
+// desmarcava o outro) e o textarea duplicado só pegava a primeira
+// observação. Agora o índice garante id único por linha.
 
-function idSeguro(data, tipo){
-    return String(data).replace(/\//g,"-") + "-" + tipo;
+function idSeguro(data, tipo, indice){
+    return String(data).replace(/\//g,"-") + "-" + tipo + "-" + indice;
 }
 
 //=======================================
@@ -330,7 +335,7 @@ function criarSecao(titulo, lista){
 
     const corpo=tabela.querySelector("tbody");
 
-    lista.forEach(item=>{
+    lista.forEach((item, indice)=>{
 
         const linha=document.createElement("tr");
 
@@ -339,8 +344,9 @@ function criarSecao(titulo, lista){
 
         const dataFormatada = formatarDataFront(item.data);
 
-        const id = idSeguro(dataFormatada, item.tipo);
+        const id = idSeguro(dataFormatada, item.tipo, indice);
 
+        linha.dataset.id=id;
         linha.dataset.data=dataFormatada;
         linha.dataset.share=item.share;
         linha.dataset.qtdsv=item.qtdSV;
@@ -354,7 +360,7 @@ function criarSecao(titulo, lista){
 
             <td data-label="Share">${formatarShare(item.share)}</td>
 
-            <td data-label="Detalhes da resposta">${item.qtdSV} de ${item.qtdTotalPdv} (S&V / total PDV)</td>
+            <td data-label="Detalhes da resposta">${item.qtdSV} de ${item.qtdTotalPdv} (S&V / total PDV)${item.empregado ? " — " + item.empregado : ""}</td>
 
             <td data-label="Status">
                 <div class="radio radio-tabela">
@@ -403,7 +409,7 @@ document.getElementById("enviar").addEventListener("click", async ()=>{
 
     for(const linha of linhas){
 
-        const id = idSeguro(linha.dataset.data, linha.dataset.tipo);
+        const id = linha.dataset.id;
 
         const marcado=linha.querySelector(`input[name="status-${id}"]:checked`);
 
