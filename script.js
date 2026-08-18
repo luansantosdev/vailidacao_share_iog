@@ -2,8 +2,8 @@
 // URL DO APPS SCRIPT
 //=======================================
 
-const URL_API = "https://script.google.com/macros/s/AKfycbwL8o8pZFWYHuRcUbbI1NEHRWWbWsKmNxXEq0vr1BEg0-k1S9V_Ol4xs2tnntX38gKFTg/exec";
-                 
+const URL_API = "https://script.google.com/macros/s/AKfycbxmlnTVJQotOztMP4igGyxV5wuou-ns8V0IXthoqmsDlXAvxZUmB47-k5zcHeFqlreseQ/exec";
+
 //=======================================
 // ELEMENTOS
 //=======================================
@@ -245,14 +245,29 @@ function formatarDataFront(valor){
 // MESMO id — os radios viravam o mesmo grupo (selecionar um
 // desmarcava o outro) e o textarea duplicado só pegava a primeira
 // observação. Agora o índice garante id único por linha.
+//
+// ATUALIZADO: o campo "tipo" agora pode vir com espaço/acento
+// (ex: "requeijao 200"), o que não é seguro dentro de um atributo
+// id/name do HTML. Removemos acentos e trocamos espaços por hífen
+// antes de montar o id.
 
 function idSeguro(data, tipo, indice){
-    return String(data).replace(/\//g,"-") + "-" + tipo + "-" + indice;
+
+    const tipoSeguro = String(tipo)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g,"")
+        .trim()
+        .replace(/\s+/g,"-");
+
+    return String(data).replace(/\//g,"-") + "-" + tipoSeguro + "-" + indice;
 }
 
 //=======================================
-// RENDERIZAR AS DUAS SEÇÕES (share iog + share req)
+// RENDERIZAR AS TRÊS SEÇÕES
 //=======================================
+// A planilha agora traz 3 tipos: "fermentados" (equivalente ao antigo
+// "share iog"/iogurte), "requeijao 200" e "requeijao 400" (o antigo
+// "share req" foi dividido em duas gramaturas).
 
 function renderizarTudo(dados){
 
@@ -267,19 +282,20 @@ function renderizarTudo(dados){
 
     }
 
-    const iog = dados.filter(d=>d.tipo==="share iog");
-    const req = dados.filter(d=>d.tipo==="share req");
+    const fermentados = dados.filter(d=>d.tipo==="fermentados");
+    const req200 = dados.filter(d=>d.tipo==="requeijao 200");
+    const req400 = dados.filter(d=>d.tipo==="requeijao 400");
 
     dadosLoja.appendChild(
-
-        criarSecao("Share IOG", iog)
-
+        criarSecao("Fermentados (Iogurte)", fermentados, "iog")
     );
 
     dadosLoja.appendChild(
+        criarSecao("Requeijão 200g", req200, "req200")
+    );
 
-        criarSecao("Share REQ", req)
-
+    dadosLoja.appendChild(
+        criarSecao("Requeijão 400g", req400, "req400")
     );
 
 }
@@ -287,12 +303,13 @@ function renderizarTudo(dados){
 //=======================================
 // CRIAR UMA SEÇÃO (título + tabela ou aviso)
 //=======================================
+// "variante" define a classe de estilo da seção: "iog", "req200" ou "req400"
 
-function criarSecao(titulo, lista){
+function criarSecao(titulo, lista, variante){
 
     const secao=document.createElement("div");
 
-    secao.className = "secao-tipo" + (titulo === "Share IOG" ? " secao-iog" : " secao-req");
+    secao.className = "secao-tipo secao-" + variante;
 
     const h2=document.createElement("h2");
 
