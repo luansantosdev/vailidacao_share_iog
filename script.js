@@ -5,7 +5,7 @@
 const URL_API = "https://script.google.com/macros/s/AKfycbxmlnTVJQotOztMP4igGyxV5wuou-ns8V0IXthoqmsDlXAvxZUmB47-k5zcHeFqlreseQ/exec";
 
 //=======================================
-// ELEMENTOS
+// ELEMENTOS    
 //=======================================
 
 const pesquisaVendedor = document.getElementById("pesquisaVendedor");
