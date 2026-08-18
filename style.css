@@ -294,21 +294,32 @@ select:disabled{
 
 }
 
-/* Linhas Share IOG (amarelado, cor da logo) */
+/* Linhas Fermentados / IOG (amarelado, cor da logo) */
 
-.linha-dia[data-tipo="share iog"]{
+.linha-dia[data-tipo="fermentados"]{
     background:#FFFBEF;
     border-left:4px solid #FFC20E;
 }
 
-.linha-dia[data-tipo="share iog"]:hover{
+.linha-dia[data-tipo="fermentados"]:hover{
     background:#FFF6DA;
 }
 
-/* Linhas Share REQ (azul) */
+/* Linhas Requeijão 200 (azul) */
 
-.linha-dia[data-tipo="share req"]{
+.linha-dia[data-tipo="requeijao 200"]{
     border-left:4px solid #0072BC;
+}
+
+/* Linhas Requeijão 400 (laranja) */
+
+.linha-dia[data-tipo="requeijao 400"]{
+    background:#FFF7F0;
+    border-left:4px solid #E67E22;
+}
+
+.linha-dia[data-tipo="requeijao 400"]:hover{
+    background:#FFEFE0;
 }
 
 .tabela-dados textarea{
@@ -462,9 +473,14 @@ button#enviar:disabled{
     border-bottom-color:#FFC20E;
 }
 
-.secao-req h2{
+.secao-req200 h2{
     color:#24356F;
     border-bottom-color:#0072BC;
+}
+
+.secao-req400 h2{
+    color:#A35314;
+    border-bottom-color:#E67E22;
 }
 
 @media(max-width:700px){
